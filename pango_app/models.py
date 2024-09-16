@@ -4,66 +4,81 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
+# Création des modèles pour l'application Pango
 class Utilisateur(AbstractUser):
     USER_TYPES = [
         ('bailleur', 'Bailleur'),
         ('locataire', 'Locataire'),
     ]
+    # Champs supplémentaires pour les utilisateurs
 
     photo_url = models.URLField(max_length=500, blank=True, null=True)  # Stocke l'URL de la photo sur Firestore
     user_type = models.CharField(max_length=10, choices=USER_TYPES)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['first_name', 'last_name','user_type','password']
+    USERNAME_FIELD = 'username'#Champ pour l'authentification
+    REQUIRED_FIELDS = ['first_name', 'last_name','user_type','password','email'] #Champs obligatoires pour la création d'un utilisateur il y a des champs par défaut herité de la classe AbstractUser
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
 class Adresse(models.Model):
+    # Modèle pour stocker les adresses des biens immobiliers
     ville = models.CharField(max_length=255)
     commune = models.CharField(max_length=255)
     quartier = models.CharField(max_length=255)
     cellule = models.CharField(max_length=255)
     avenue = models.CharField(max_length=255)
     num_av = models.CharField(max_length=10)
-    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='adresses')
-
     def __str__(self):
         return f"{self.avenue}, {self.quartier}, {self.commune}, {self.ville}"
 
 class BienImmobilier(models.Model):
-    adresse = models.OneToOneField(Adresse, on_delete=models.CASCADE)
-    surface = models.DecimalField(max_digits=10, decimal_places=2)
+    # Modèle pour stocker les biens immobiliers
+    adresse = models.OneToOneField(Adresse, on_delete=models.CASCADE)#L'adresse du bien immobilier
+    surface = models.DecimalField(max_digits=10, decimal_places=2)#La surface du bien immobilier
     photo_url = models.URLField(max_length=500, blank=True, null=True)  # Stocke l'URL de la photo du bien immobilier sur Firestore
-    description = models.TextField()
-    prix = models.DecimalField(max_digits=10, decimal_places=2)
-    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='biens')
+    description = models.TextField() #Description du bien immobilier
+    prix = models.DecimalField(max_digits=10, decimal_places=2)#Le prix du bien immobilier
+    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='biens')#Le propriétaire du bien immobilier
 
     def clean(self):
-        if self.utilisateur.user_type != 'bailleur':
-            raise ValidationError('Seul un bailleur peut posséder un bien immobilier.')
+        if self.utilisateur.user_type != 'bailleur': #Vérifie si le propriétaire du bien immobilier est un bailleur
+            raise ValidationError('Seul un bailleur peut posséder un bien immobilier.')#Message d'erreur
 
     def __str__(self):
         return f"{self.description[:50]} - {self.prix} USD"
 
 class ContratLocation(models.Model):
-    date_contrat = models.DateField()
-    date_debut = models.DateField()
-    duree_contrat = models.IntegerField()
-    prix = models.DecimalField(max_digits=10, decimal_places=2)
-    fichier = models.FileField(upload_to='contrats/')
-    encours = models.BooleanField(default=False)
-    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='contrats')
-    bien = models.ForeignKey(BienImmobilier, on_delete=models.CASCADE, related_name='contrats')
-
-    def clean(self):
+    """ Modèle pour stocker les contrats de location """
+    date_contrat = models.DateField() #Date de signature du contrat
+    date_debut = models.DateField()#Date de début du contrat
+    prix = models.DecimalField(max_digits=10, decimal_places=2)#Le prix du contrat
+    fichier = models.URLField(max_length=500, blank=True, null=True)#Le fichier du contrat s'il y en a
+    encours = models.BooleanField(default=False) #Indique si le contrat est en cours ou non
+    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE,null=True,related_name='contrats') #Le locataire du bien immobilier le locateur 
+    bien = models.ForeignKey(BienImmobilier, on_delete=models.CASCADE, related_name='contrats') #Le bien immobilier loué par le locataire 
+    def clean(self):#Vérifie si le locataire est un locataire
         if self.utilisateur.user_type != 'locataire':
             raise ValidationError('Seuls les locataires peuvent signer un contrat de location.')
 
     def __str__(self):
         return f"Contrat de {self.utilisateur} pour {self.bien}"
 
+class Mot_cle(models.Model):
+    # Modèle pour stocker les mots-clés
+    locataire=models.ForeignKey( Utilisateur, on_delete=models.CASCADE, related_name='mots_cles')
+    contrat = models.ForeignKey(ContratLocation, on_delete=models.CASCADE, related_name='mots_cles')
+    mot_cle = models.CharField(max_length=255)
+    
+    def clean(self):
+        if self.locataire.user_type != 'locataire': 
+            raise ValidationError('Seuls les locataires peuvent ajouter des mots-clés.')
+    
+    
+    def __str__(self):
+        return self.mot_cle
 class Payement(models.Model):
+    # Modèle pour stocker les payements effectués par les locataires
     montant = models.DecimalField(max_digits=10, decimal_places=2)
     date_payement = models.DateField()
     moyen_payement = models.CharField(max_length=255)
@@ -76,6 +91,7 @@ class Evenement(models.Model):
         ('visite', 'Visite'),
         ('convocation', 'Convocation'),
         ('grace', 'Mesure de Grâce'),
+        
     ]
 
     type_evenement = models.CharField(max_length=50, choices=TYPE_EVENEMENT)
@@ -105,6 +121,7 @@ class Evenement(models.Model):
             self.envoyer_notification(f"{self.modifier_jour} jours avant l'événement")
 
     def envoyer_notification(self, message):
+        
         # Logique pour envoyer la notification (email, SMS, etc.)
         print(f"Notification: {message} pour l'événement {self.type_evenement}")
 

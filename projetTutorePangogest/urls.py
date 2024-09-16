@@ -16,7 +16,33 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls.conf import include
+from pango_app.urls import router
+from rest_framework import permissions
+
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from django.urls import path, re_path
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Pango Gest API",
+        default_version='v1',
+        description="Documentation API de Pango Gest",
+        terms_of_service="https://www.votreapp.com/terms/",
+        contact=openapi.Contact(email="support@pangogest.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
+      # URL pour Swagger UI
+    re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    # URL pour ReDoc (alternative à Swagger UI)
+    re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
 ]
