@@ -69,7 +69,7 @@ class UtilisateurViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def register(self, request):
-        """
+        """ 
         Créer un nouvel utilisateur.
         request: requête HTTP
         return: réponse HTTP
@@ -241,7 +241,85 @@ class BienImmobilierViewSet(viewsets.ModelViewSet):
 class AdresseViewSet(viewsets.ModelViewSet):
     queryset = Adresse.objects.all()
     serializer_class = AdresseSerializer
-
+    
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'ville': openapi.Schema(type=openapi.TYPE_STRING, description='Ville'),
+                'commune': openapi.Schema(type=openapi.TYPE_STRING, description='Commune'),
+                'quartier': openapi.Schema(type=openapi.TYPE_STRING, description='Quartier'),
+                'cellule': openapi.Schema(type=openapi.TYPE_STRING, description='Cellule'),
+                'avenue': openapi.Schema(type=openapi.TYPE_STRING, description='Avenue'),
+                'num_av': openapi.Schema(type=openapi.TYPE_STRING, description='Numéro de l\'avenue'),
+            },
+            required=['ville', 'commune', 'quartier', 'cellule', 'avenue', 'num_av'],
+        ),
+        responses={
+            201: "Adresse créée avec succès",
+            400: "Erreur de validation"
+        }
+    )
+    @action(detail=False, methods=['post'])
+    def register_adresse(self, request):
+        """
+        Créer une nouvelle adresse.
+        request: requête HTTP
+        return: réponse HTTP
+        required: ville, commune, quartier, cellule, avenue, num_av
+        exemple:
+        {
+            "ville": "Kinshasa",
+            "commune": "Gombe",
+            "quartier": "Limete",
+            "cellule": "Cellule 1",
+            "avenue": "Avenue de la paix",
+            "num_av": "123"
+        }
+        return:
+        {
+            "response": "Adresse créée avec succès",
+            "adresse": {
+                "id": 1,
+                "ville": "Kinshasa",
+                "commune": "Gombe",
+                "quartier": "Limete",
+                "cellule": "Cellule 1",
+                "avenue": "Avenue de la paix",
+                "num_av": "123"
+            }
+        }
+        OU
+        {
+            "response": "Erreur de validation",
+            "errors": {
+                "ville": [
+                    "Ce champ est obligatoire."
+                ],
+                "commune": [
+                    "Ce champ est obligatoire."
+                ]
+            }
+        }
+        
+        """
+        serializer = AdresseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            message = {
+                "response": "Adresse créée avec succès",
+                "adresse": serializer.data
+            }
+            return Response(message, status=status.HTTP_201_CREATED)
+        message = {
+            "response": "Erreur de validation",
+            "errors": serializer.errors
+        }
+        return Response(message, status=status.HTTP_400_BAD_REQUEST)
+    
+        
+        
 class PayementViewSet(viewsets.ModelViewSet):
     queryset = Payement.objects.all()
     serializer_class = PayementSerializer
