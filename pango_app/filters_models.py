@@ -22,7 +22,7 @@ class BienImmobilierFilter(django_filters.FilterSet):
 class ContratLocationFilter(django_filters.FilterSet):
     class Meta:
         model = ContratLocation
-        fields = ['date_contrat', 'date_debut', 'prix', 'encours']
+        fields = ['date_contrat','locataire__id' ,'date_debut', 'prix', 'encours','bien__utilisateur__id']
 
 class PayementFilter(django_filters.FilterSet):
     class Meta:

@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
 #impprte decoreators
 from rest_framework.decorators import action,api_view
 from rest_framework.response import Response
@@ -9,10 +10,12 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import *
 from .serializers import *
+from .filters_models import *
 
 class UtilisateurViewSet(viewsets.ModelViewSet):
     queryset = Utilisateur.objects.all()
     serializer_class = UtilisateurSerializer
+    
     @swagger_auto_schema(
         method='post',
         request_body=openapi.Schema(
@@ -236,12 +239,49 @@ class Mot_cleViewSet(viewsets.ModelViewSet):
 
 class BienImmobilierViewSet(viewsets.ModelViewSet):
     queryset = BienImmobilier.objects.all()
-    serializer_class = BienImmobilierSerializer
-
+    serializer_class = BienImmobilierSerializer    
+    filter_backends = [DjangoFilterBackend]
+    filterset_class=BienImmobilierFilter
 class AdresseViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet pour gérer les adresses.
+    Les adresses peuvent être filtrées par 'ville' et 'id'.
+    """
+    
     queryset = Adresse.objects.all()
     serializer_class = AdresseSerializer
-    
+    filter_backends = [DjangoFilterBackend]
+    filterset_class=AdresseFilter
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'ville',
+                openapi.IN_QUERY,
+                description="Filtrer par ville (ex: ?ville=Bukavu)",
+                type=openapi.TYPE_STRING
+            ),
+            
+            openapi.Parameter(
+                'commune',
+                openapi.IN_QUERY,
+                description="Filtrer par commune (ex: ?commune=Ibanda)",
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                'id',
+                openapi.IN_QUERY,
+                description="Filtrer par ID de l'adresse (ex: ?id=1)",
+                type=openapi.TYPE_INTEGER
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """
+        Liste les adresses avec possibilité de filtrer par 'ville' et 'id'.
+        Exemple d'URL de requête : /api/adresse/?ville=Kinshasa&id=1
+        """
+        return super().list(request, *args, **kwargs)
+
     @swagger_auto_schema(
         method='post',
         request_body=openapi.Schema(
@@ -265,44 +305,8 @@ class AdresseViewSet(viewsets.ModelViewSet):
     def register_adresse(self, request):
         """
         Créer une nouvelle adresse.
-        request: requête HTTP
-        return: réponse HTTP
-        required: ville, commune, quartier, cellule, avenue, num_av
-        exemple:
-        {
-            "ville": "Kinshasa",
-            "commune": "Gombe",
-            "quartier": "Limete",
-            "cellule": "Cellule 1",
-            "avenue": "Avenue de la paix",
-            "num_av": "123"
-        }
-        return:
-        {
-            "response": "Adresse créée avec succès",
-            "adresse": {
-                "id": 1,
-                "ville": "Kinshasa",
-                "commune": "Gombe",
-                "quartier": "Limete",
-                "cellule": "Cellule 1",
-                "avenue": "Avenue de la paix",
-                "num_av": "123"
-            }
-        }
-        OU
-        {
-            "response": "Erreur de validation",
-            "errors": {
-                "ville": [
-                    "Ce champ est obligatoire."
-                ],
-                "commune": [
-                    "Ce champ est obligatoire."
-                ]
-            }
-        }
         
+        Champs requis: ville, commune, quartier, cellule, avenue, num_av.
         """
         serializer = AdresseSerializer(data=request.data)
         if serializer.is_valid():
@@ -323,11 +327,16 @@ class AdresseViewSet(viewsets.ModelViewSet):
 class PayementViewSet(viewsets.ModelViewSet):
     queryset = Payement.objects.all()
     serializer_class = PayementSerializer
-
+    filter_backends=[DjangoFilterBackend]
+    filterset_class=PayementFilter    
 class ContratLocationViewSet(viewsets.ModelViewSet):
     queryset = ContratLocation.objects.all()
     serializer_class = ContratLocationSerializer
-
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ContratLocationFilter
+   
 class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
     serializer_class = EvenementSerializer
+    
+    

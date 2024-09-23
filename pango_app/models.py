@@ -55,10 +55,10 @@ class ContratLocation(models.Model):
     prix = models.DecimalField(max_digits=10, decimal_places=2)#Le prix du contrat
     fichier = models.URLField(max_length=500, blank=True, null=True)#Le fichier du contrat s'il y en a
     encours = models.BooleanField(default=False) #Indique si le contrat est en cours ou non
-    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE,null=True,related_name='contrats') #Le locataire du bien immobilier le locateur 
+    locataire = models.ForeignKey(Utilisateur, on_delete=models.CASCADE,null=True,related_name='contrats') #Le locataire du bien immobilier le locateur 
     bien = models.ForeignKey(BienImmobilier, on_delete=models.CASCADE, related_name='contrats') #Le bien immobilier loué par le locataire 
     def clean(self):#Vérifie si le locataire est un locataire
-        if self.utilisateur.user_type != 'locataire':
+        if self.locataire.user_type != 'locataire':
             raise ValidationError('Seuls les locataires peuvent signer un contrat de location.')
 
     def __str__(self):
