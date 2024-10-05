@@ -1,8 +1,6 @@
 import django_filters
 from .models import *
 
-import django_filters
-from .models import Adresse
 
 class AdresseFilter(django_filters.FilterSet):
     class Meta:

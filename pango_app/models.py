@@ -1,10 +1,22 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser,Group,Permission
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
 # Création des modèles pour l'application Pango
+
+class Adresse(models.Model):
+    # Modèle pour stocker les adresses des biens immobiliers
+    ville = models.CharField(max_length=255)
+    commune = models.CharField(max_length=255)
+    quartier = models.CharField(max_length=255)
+    cellule = models.CharField(max_length=255,null=True)
+    avenue = models.CharField(max_length=255)
+    num_av = models.CharField(max_length=10)
+    def __str__(self):
+        return f"{self.avenue}, {self.quartier}, {self.commune}, {self.ville}"
+
 class Utilisateur(AbstractUser):
     USER_TYPES = [
         ('bailleur', 'Bailleur'),
@@ -14,23 +26,18 @@ class Utilisateur(AbstractUser):
 
     photo_url = models.URLField(max_length=500, blank=True, null=True)  # Stocke l'URL de la photo sur Firestore
     user_type = models.CharField(max_length=10, choices=USER_TYPES)
+    telephone=models.CharField(max_length=14)
+    id_adresse=models.ForeignKey('Adresse',on_delete=models.CASCADE,null=True)
+    groups = models.ManyToManyField(Group, related_name='myuser_set', blank=True)
+    user_permissions = models.ManyToManyField(
+        Permission, related_name='utilisateur_set', blank=True
+    )
 
     USERNAME_FIELD = 'username'#Champ pour l'authentification
-    REQUIRED_FIELDS = ['first_name', 'last_name','user_type','password','email'] #Champs obligatoires pour la création d'un utilisateur il y a des champs par défaut herité de la classe AbstractUser
+    REQUIRED_FIELDS = ['first_name', 'last_name','user_type','password','email','telephone'] #Champs obligatoires pour la création d'un utilisateur il y a des champs par défaut herité de la classe AbstractUser
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-
-class Adresse(models.Model):
-    # Modèle pour stocker les adresses des biens immobiliers
-    ville = models.CharField(max_length=255)
-    commune = models.CharField(max_length=255)
-    quartier = models.CharField(max_length=255)
-    cellule = models.CharField(max_length=255)
-    avenue = models.CharField(max_length=255)
-    num_av = models.CharField(max_length=10)
-    def __str__(self):
-        return f"{self.avenue}, {self.quartier}, {self.commune}, {self.ville}"
 
 class BienImmobilier(models.Model):
     # Modèle pour stocker les biens immobiliers
