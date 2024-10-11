@@ -93,7 +93,7 @@ DATABASES = {
         'NAME': 'pangogest',          # Name of your MySQL database
         'USER': 'njuci',             # Your MySQL username
         'PASSWORD': '3670njci',     # Your MySQL password
-        'HOST': '34.45.123.91',             # Host of your MySQL server, e.g., 'localhost' for local
+        'HOST': 'localhost',             # Host of your MySQL server, e.g., 'localhost' for local
         'PORT': '3306',                        # Port number (default is 3306)
     }
 }
