@@ -89,8 +89,12 @@ WSGI_APPLICATION = 'projetTutorePangogest.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',  # MySQL backend
+        'NAME': 'pangogest',          # Name of your MySQL database
+        'USER': 'njuci',             # Your MySQL username
+        'PASSWORD': '3670njci',     # Your MySQL password
+        'HOST': '34.45.123.91',             # Host of your MySQL server, e.g., 'localhost' for local
+        'PORT': '3306',                        # Port number (default is 3306)
     }
 }
 

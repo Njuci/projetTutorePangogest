@@ -10,4 +10,6 @@ router.register(r'adresse', AdresseViewSet, basename='adresse')
 router.register(r'bien_imobilier', BienImmobilierViewSet, basename='bien_imobilier')
 
 router.register(r'contrat_location',ContratLocationViewSet,basename='contrat_location')
+
+
 #add
