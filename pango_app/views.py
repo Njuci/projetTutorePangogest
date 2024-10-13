@@ -41,30 +41,21 @@ class UtilisateurViewSet(viewsets.ModelViewSet):
         password = request.data.get('password')
         try:
         # Recherchez l'utilisateur par email
-            user = Utilisateur.objects.filter(email=usernme, password=password).first()
+            user = Utilisateur.objects.get(email=usernme)
             serializer_user = UtilisateurSerializer(user)
-            data = {
-                'user': serializer_user.data
-            }
+            if serializer_user.data['password'] == password:
+                
+                data = serializer_user.data
+               
             
-            if user :
-                
-                serializer = UtilisateurSerializer(user)
                 return Response(data, status=status.HTTP_200_OK)
-                
+            else:
+                return Response({"message":"Mot de passe invalide"}, status=status.HTTP_401_UNAUTHORIZED)    
             
             
         except Utilisateur.DoesNotExist:
-            return Response({"message":"user not found"}, status=status.HTTP_400_BAD_REQUEST)
-        except Adresse.DoesNotExist:
-            print('e')
-            print('e')
+            return Response({"message":"user not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        # Si l'utilisateur n'est pas trouvé ou mot de passe incorrect
-        return Response({"error": "Invalid credentials"}, status=status.HTTP_404_NOT_FOUND)
-    #Documentation de l'API
-   
-
 class Mot_cleViewSet(viewsets.ModelViewSet):
     queryset = Mot_cle.objects.all()
     serializer_class = Mot_cleSerializer
