@@ -42,26 +42,23 @@ class UtilisateurViewSet(viewsets.ModelViewSet):
         try:
         # Recherchez l'utilisateur par email
             user = Utilisateur.objects.filter(email=usernme, password=password).first()
-            adresse=Adresse.objects.get(user=user.adresse)
             serializer_user = UtilisateurSerializer(user)
-            serializer_adresse =AdresseSerializer(adresse)
             data = {
-                'user': serializer_user.data,
-                'adresse': serializer_adresse.data
+                'user': serializer_user.data
             }
             
-            
+            if user :
+                
+                serializer = UtilisateurSerializer(user)
+                return Response(data, status=status.HTTP_200_OK)
+                
             
             
         except Utilisateur.DoesNotExist:
-            return Response({"message":"user not found"}, status=status.HTTP_4)
+            return Response({"message":"user not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Adresse.DoesNotExist:
             print('e')
             print('e')
-        if user :
-            
-            serializer = UtilisateurSerializer(user)
-            return Response(data, status=status.HTTP_200_OK)
         
         # Si l'utilisateur n'est pas trouvé ou mot de passe incorrect
         return Response({"error": "Invalid credentials"}, status=status.HTTP_404_NOT_FOUND)
