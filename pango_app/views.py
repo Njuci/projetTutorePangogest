@@ -56,6 +56,35 @@ class UtilisateurViewSet(viewsets.ModelViewSet):
         except Utilisateur.DoesNotExist:
             return Response({"message":"user not found"}, status=status.HTTP_404_NOT_FOUND)
         
+    @action(detail=False, methods=['post'])
+    def register(self, request):
+        """
+        Créer un nouvel utilisateur.
+        
+        Champs requis: email, password, nom, prenom, telephone, adresse.
+        """
+        serializer = UtilisateurSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            message = {
+                "response": "Utilisateur créé avec succès",
+                "utilisateur": serializer.data
+            }
+            return Response(message, status=status.HTTP_201_CREATED)
+        # En cas d'erreur de validation
+        
+        #SI L'UTILISATEUR EXISTE DEJA
+        if Utilisateur.objects.filter(email=request.data['email']).exists():
+            # Retourner un message d'erreur et l'instance de l'utilisateur
+            
+            return Response({"message":"Cet utilisateur existe déjà"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        message = {
+            "response": "Erreur de validation",
+            "errors": serializer.errors
+        }
+        return Response(message, status=status.HTTP_400_BAD_REQUEST)
+        
 class Mot_cleViewSet(viewsets.ModelViewSet):
     queryset = Mot_cle.objects.all()
     serializer_class = Mot_cleSerializer

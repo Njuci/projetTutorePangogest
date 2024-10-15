@@ -42,7 +42,7 @@ class Utilisateur(AbstractUser):
 class BienImmobilier(models.Model):
     # Modèle pour stocker les biens immobiliers
     adresse = models.OneToOneField(Adresse, on_delete=models.CASCADE)#L'adresse du bien immobilier
-    surface = models.DecimalField(max_digits=10, decimal_places=2)#La surface du bien immobilier
+    surface = models.CharField(max_length=10)#La surface du bien immobilier
     photo_url = models.URLField(max_length=500, blank=True, null=True)  # Stocke l'URL de la photo du bien immobilier sur Firestore
     description = models.TextField() #Description du bien immobilier
     prix = models.DecimalField(max_digits=10, decimal_places=2)#Le prix du bien immobilier
