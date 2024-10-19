@@ -89,6 +89,24 @@ WSGI_APPLICATION = 'projetTutorePangogest.wsgi.application'
 
 DATABASES = {
     'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pangogest',
+        'USER': 'pangogest_owner',
+        'PASSWORD': '1F5uVGjvSwJI',
+        'HOST': 'ep-raspy-dawn-a5drmvbd.us-east-2.aws.neon.tech',
+        'PORT': '5432',  # PostgreSQL utilise généralement le port 5432
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
+    }
+}
+
+
+
+
+"""
+DATABASES = {
+    'default': {
         'ENGINE': 'django.db.backends.mysql',  # MySQL backend
         'NAME': 'pangogest',          # Name of your MySQL database
         'USER': 'njuci',             # Your MySQL username
@@ -97,7 +115,7 @@ DATABASES = {
         'PORT': '3306',                        # Port number (default is 3306)
     }
 }
-
+"""
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
