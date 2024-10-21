@@ -1,3 +1,4 @@
+from .sendingemail import envoyer_email
 from django.shortcuts import render
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,6 +12,45 @@ from drf_yasg import openapi
 from .models import *
 from .serializers import *
 from .filters_models import *
+
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+from django.db.models import Q
+import uuid
+import base64
+
+def generer_mot_cle_unique():
+    uuid_bytes = uuid.uuid4().bytes  # UUID sous forme de bytes
+    base64_uuid = base64.urlsafe_b64encode(uuid_bytes).decode('utf-8')  # Encodé en base64 et converti en chaîne
+    return str(base64_uuid[:10])  # Tronqué à 10 caractères et converti en chaîne
+
+
+
+def verifier_contrat_chevauchement(bien, date_debut_str, duree_mois):
+    """
+    Vérifie s'il existe un contrat pour le bien donné pendant la période spécifiée.
+
+    :param bien: Instance du bien immobilier à vérifier
+    :param date_debut_str: Date de début de la période sous forme de chaîne (format 'YYYY-MM-DD')
+    :param date_fin_str: Date de fin de la période sous forme de chaîne (format 'YYYY-MM-DD')
+    :return: True s'il existe un contrat chevauchant la période, sinon False
+    """
+    # Convertir les dates de chaîne en objets datetime
+    date_debut = datetime.strptime(date_debut_str, "%Y-%m-%d").date()
+    # Calculer la date de fin en fonction de la durée (duree_mois)
+    date_fin = date_debut + relativedelta(months=int(duree_mois))
+    # Calculer les contrats dont les dates chevauchent la période donnée
+    contrats_chevauchants = ContratLocation.objects.filter(
+        bien=bien
+    ).filter(
+        Q(date_debut__lte=date_fin) &  # Le contrat commence avant ou pendant la période
+        Q(date_debut__gte=date_debut) |  # Le contrat commence après ou pendant la période
+        Q(date_debut__lte=date_debut, # Si le contrat commence avant le début de la période
+          date_debut__gte=date_fin)  # et il se termine après ou pendant la période
+    )
+
+    return contrats_chevauchants.exists()
+
 
 class UtilisateurViewSet(viewsets.ModelViewSet):
     queryset = Utilisateur.objects.all()
@@ -186,6 +226,78 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
     serializer_class = ContratLocationSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = ContratLocationFilter
+    @action(detail=False, methods=['post'])
+    def register_contrat(self, request):
+        """
+        Créer un contrat
+        Champs requis: date_debut, date_fin, prix, bien, locataire, fichier,date_contrat,encours,
+        mets aussi l'email 
+        
+        """
+        # Récupérer les données de la requête
+        bien= request.data.get('bien')
+        date_debut = request.data.get('date_debut')
+        duree_mois = request.data.get('duree_mois')
+        email=request.data.get('email')
+        
+        # Vérifier si le bien immobilier existe
+        try:
+            bien_immobilier = BienImmobilier.objects.get(id=bien)
+            # Vérifier si le contrat chevauche un autre contrat
+            if verifier_contrat_chevauchement(bien_immobilier, date_debut, duree_mois):
+                return Response({"message": "Le contrat chevauche un autre contrat existant"}, status=status.HTTP_400_BAD_REQUEST)
+        except BienImmobilier.DoesNotExist:
+            return Response({"message": "Bien immobilier non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+        
+        
+        
+        
+        serializer = ContratLocationSerializer(data=request.data)  
+        #chercher le proprietaire du bien
+        proprietaire = f'{bien_immobilier.utilisateur.first_name} {bien_immobilier.utilisateur.last_name}'
+        
+        
+             
+                                                                          
+                                                                           
+        if serializer.is_valid():
+            serializer.save()
+            
+            #en voyant un email
+            contrat = serializer.data
+            #gemerer un motcle
+            mot_cle = generer_mot_cle_unique()
+            #enregistrer le mot cle via son serializer
+            mot_cle_serializer = Mot_cleSerializer(data={'email':email,'contrat':serializer.data['id'],'mot_cle':mot_cle})
+            if mot_cle_serializer.is_valid():
+                mot_cle_serializer.save()
+            else:
+                return Response({"message":"Erreur lors de la création du mot-clé","error":mot_cle_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+            contrat2 ={}
+            #met leskeys en Majuscule en eliminant les underscores
+            for key in contrat:
+                new_key = key.replace('_',' ').upper()
+                contrat2[new_key] = contrat[key]
+            contrat = contrat2
+            has_send=envoyer_email(email,proprietaire,contrat,mot_cle)
+            if has_send:
+                message = {
+                "response": "Contrat créé avec succès",
+                "contrat": serializer.data
+            }
+                return Response(message, status=status.HTTP_201_CREATED)
+            else:
+                return Response({"message":"Erreur lors de l'envoi de l'email"}, status=status.HTTP_400_BAD_REQUEST)
+            #
+        message = {
+            "response": "Erreur de validation",
+            "errors": serializer.errors
+        }
+        return Response(message, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
    
 class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()

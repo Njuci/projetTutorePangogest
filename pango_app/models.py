@@ -61,24 +61,30 @@ class ContratLocation(models.Model):
     date_debut = models.DateField()#Date de début du contrat
     prix = models.DecimalField(max_digits=10, decimal_places=2)#Le prix du contrat
     fichier = models.URLField(max_length=500, blank=True, null=True)#Le fichier du contrat s'il y en a
+    duree_mois = models.IntegerField()#La durée du contrat en mois
     encours = models.BooleanField(default=False) #Indique si le contrat est en cours ou non
     locataire = models.ForeignKey(Utilisateur, on_delete=models.CASCADE,null=True,related_name='contrats') #Le locataire du bien immobilier le locateur 
     bien = models.ForeignKey(BienImmobilier, on_delete=models.CASCADE, related_name='contrats') #Le bien immobilier loué par le locataire 
     def clean(self):#Vérifie si le locataire est un locataire
-        if self.locataire.user_type != 'locataire':
+        if self.locataire and self.locataire.user_type != 'locataire':
             raise ValidationError('Seuls les locataires peuvent signer un contrat de location.')
 
     def __str__(self):
-        return f"Contrat de {self.utilisateur} pour {self.bien}"
+        if self.locataire:
+            return f"Contrat de {self.locataire.first_name} pour {self.bien}"
+        else:
+            return f"Contrat pour {self.bien}"
+        
 
 class Mot_cle(models.Model):
     # Modèle pour stocker les mots-clés
-    locataire=models.ForeignKey( Utilisateur, on_delete=models.CASCADE, related_name='mots_cles')
+    locataire=models.ForeignKey( Utilisateur, on_delete=models.CASCADE,null=True ,related_name='mots_cles')
+    email=models.EmailField(null=True)
     contrat = models.ForeignKey(ContratLocation, on_delete=models.CASCADE, related_name='mots_cles')
     mot_cle = models.CharField(max_length=255)
     
     def clean(self):
-        if self.locataire.user_type != 'locataire': 
+        if self.locataire and self.locataire.user_type != 'locataire': 
             raise ValidationError('Seuls les locataires peuvent ajouter des mots-clés.')
     
     

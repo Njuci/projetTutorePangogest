@@ -11,10 +11,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+TEMPLATES_DIR=os.path.join(BASE_DIR,'templates')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -68,7 +69,7 @@ ROOT_URLCONF = 'projetTutorePangogest.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATES_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,6 +88,9 @@ WSGI_APPLICATION = 'projetTutorePangogest.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -102,19 +106,19 @@ DATABASES = {
 }
 
 
-
-
 """
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',  # MySQL backend
         'NAME': 'pangogest',          # Name of your MySQL database
         'USER': 'njuci',             # Your MySQL username
         'PASSWORD': '3670njci',     # Your MySQL password
-        'HOST': '34.45.123.91',             # Host of your MySQL server, e.g., 'localhost' for local
+        'HOST': 'localhost',             # Host of your MySQL server, e.g., 'localhost' for local
         'PORT': '3306',                        # Port number (default is 3306)
     }
 }
+
 """
 
 # Password validation
@@ -162,3 +166,15 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'pango_app.Utilisateur'
 # Configure Django App for Heroku.
+
+
+
+
+
+# Email backend configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'augustinnjuci@gmail.com'
+EMAIL_HOST_PASSWORD = 'fmzyfuvjvqxgjcwk'
+EMAIL_USE_TLS = True
