@@ -314,12 +314,13 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             contrat = mot_cle_instance.contrat
             contrat_serializer = ContratLocationSerializer(contrat)
             
-            return Response({
-                "message": "Mot clé et email valides",
-                "contrat": contrat_serializer.data
-            }, status=status.HTTP_200_OK)
+            return Response(
+               
+                contrat_serializer.data
+            , status=status.HTTP_200_OK)
         except Mot_cle.DoesNotExist:
-            return Response({"message": "Mot clé ou email non trouvés ou non valides"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "Mot clé ou email non trouvés ou non valides"},
+                            status=status.HTTP_404_NOT_FOUND)
     
    
 class EvenementViewSet(viewsets.ModelViewSet):
