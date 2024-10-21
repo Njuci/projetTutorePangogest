@@ -296,7 +296,30 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
         }
         return Response(message, status=status.HTTP_400_BAD_REQUEST)
     
-    
+    @action(detail=False, methods=['post'])
+    def verifier_mot_cle(self, request):
+        """
+        Vérifier si un mot clé et un email sont liés à un contrat
+        """
+        # Récupérer le mot clé et l'email dans le corps de la requête
+        mot_cle = request.data.get('mot_cle')
+        email = request.data.get('email')
+        
+        if not mot_cle or not email:
+            return Response({"message": "Mot clé et email sont requis"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Rechercher le mot clé et vérifier l'email associé
+            mot_cle_instance = Mot_cle.objects.get(mot_cle=mot_cle, email=email)
+            contrat = mot_cle_instance.contrat
+            contrat_serializer = ContratLocationSerializer(contrat)
+            
+            return Response({
+                "message": "Mot clé et email valides",
+                "contrat": contrat_serializer.data
+            }, status=status.HTTP_200_OK)
+        except Mot_cle.DoesNotExist:
+            return Response({"message": "Mot clé ou email non trouvés ou non valides"}, status=status.HTTP_404_NOT_FOUND)
     
    
 class EvenementViewSet(viewsets.ModelViewSet):
