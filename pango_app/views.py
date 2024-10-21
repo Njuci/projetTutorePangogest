@@ -322,6 +322,54 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             return Response({"message": "Mot clé ou email non trouvés ou non valides"},
                             status=status.HTTP_404_NOT_FOUND)
     
+    @action(detail=False, methods=['post'])
+    def validation_contrat(self, request):
+        """
+        Vérifier si un mot clé et un email sont liés à un contrat
+        """
+        # Récupérer le mot clé, l'email et la réponse dans le corps de la requête
+        mot_cle = request.data.get('mot_cle')
+        email = request.data.get('email')
+        reponse = request.data.get('response')  # le locataire accepte ou rejette le contrat
+
+        if not mot_cle or not email or reponse is None:
+            return Response({"message": "Mot clé, email et réponse sont requis"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Rechercher le mot clé et vérifier l'email associé
+            mot_cle_instance = Mot_cle.objects.get(mot_cle=mot_cle, email=email)
+
+            # Chercher l'utilisateur associé à l'email
+            user = Utilisateur.objects.get(email=email)
+            if user.user_type != 'locataire':
+                return Response({"errors": "Un utilisateur doit être du type locataire"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Vérifier si le contrat a déjà un locataire
+            contrat = mot_cle_instance.contrat
+            if contrat.locataire is not None:
+                return Response({"message": "Ce contrat a déjà un locataire"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Gérer la réponse du locataire
+            if reponse.lower() == 'accepter':
+                # Assigner le locataire au contrat
+                contrat.locataire = user
+                contrat.save()
+                contrat_serializer = ContratLocationSerializer(contrat)
+
+                return Response(contrat_serializer.data, 
+                                status=status.HTTP_200_OK)
+            elif reponse.lower() == 'rejeter':
+                return Response({"message": "Contrat rejeté par le locataire"}, status=status.HTTP_400_BAD_REQUEST)
+            else:   
+                return Response({"message": "Réponse non valide, veuillez répondre par 'accepter' ou 'rejeter'"}, 
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        except Mot_cle.DoesNotExist:
+            return Response({"message": "Mot clé ou email non trouvés ou non valides"}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+        except Utilisateur.DoesNotExist:
+            return Response({"message": "Aucun utilisateur associé à cet email"}, status=status.HTTP_400_BAD_REQUEST)
+    
    
 class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
