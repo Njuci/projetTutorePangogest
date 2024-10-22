@@ -19,6 +19,70 @@ from django.db.models import Q
 import uuid
 import base64
 
+from rest_framework import status
+from rest_framework.response import Response
+
+
+def recuperer_locataires(bailleur_id):
+    # Récupérer les contrats de location pour le bailleur donné
+    locataires = ContratLocation.objects.filter(bien__utilisateur__id=bailleur_id).select_related('locataire')
+    
+    if locataires.exists():
+        # Filtrer les locataires qui ne sont pas None
+        locataires_list = [contrat.locataire for contrat in locataires if contrat.locataire is not None]
+        
+        if locataires_list:
+            # Sérialiser les locataires
+            serializer = UtilisateurSerializer(locataires_list, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Aucun locataire trouvé."}, status=status.HTTP_404_NOT_FOUND)
+    
+    return Response({"detail": "Aucun locataire trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+
+def recuperer_bailleur(locataire_id):
+    # Récupérer les contrats de location liés au locataire
+    bailleurs = ContratLocation.objects.filter(locataire__id=locataire_id).select_related('bien__utilisateur')
+    if bailleurs.exists():
+        # Récupérer les objets 'bien'
+        biens = [contrat.bien.utilisateur for contrat in bailleurs]
+        
+        # Sérialiser les objets bailleurs
+        serializer = UtilisateurSerializer(biens, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response({"detail": "Aucun bailleur trouvé."}, status=status.HTTP_404_NOT_FOUND)
+    
+def recuperer_maison_locataire(locataire_id):
+    # Récupérer le contrat de location lié au locataire
+    maison = ContratLocation.objects.filter(locataire__id=locataire_id).select_related('bien')
+    
+    if maison.exists():
+        # Récupérer les objets 'bien'
+        biens = [contrat.bien for contrat in maison]
+        
+        # Sérialiser les objets biens immobiliers
+        serializer = BienImmobilierSerializer(biens, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    return Response({"detail": "Aucune maison trouvée."}, status=status.HTTP_404_NOT_FOUND)
+
+def recuperer_maisons_bailleur(bailleur_id):
+    # Récupérer les contrats de location liés au bailleur
+    maisons = ContratLocation.objects.filter(bien__utilisateur__id=bailleur_id).select_related('bien')
+    
+    if maisons.exists():
+        # Récupérer les objets 'bien'
+        biens = [contrat.bien for contrat in maisons]
+        
+        # Sérialiser les objets biens immobiliers
+        serializer = BienImmobilierSerializer(biens, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    return Response({"detail": "Aucune maison trouvée pour ce bailleur."}, status=status.HTTP_404_NOT_FOUND)
+
+
 def generer_mot_cle_unique():
     uuid_bytes = uuid.uuid4().bytes  # UUID sous forme de bytes
     base64_uuid = base64.urlsafe_b64encode(uuid_bytes).decode('utf-8')  # Encodé en base64 et converti en chaîne
@@ -99,7 +163,7 @@ class UtilisateurViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def register(self, request):
         """
-        Créer un nouvel utilisateur.
+!        Créer un nouvel utilisateur.
         
         Champs requis: email, password, nom, prenom, telephone, adresse.
         """
@@ -369,8 +433,38 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
         except Utilisateur.DoesNotExist:
             return Response({"message": "Aucun utilisateur associé à cet email"}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def locataires_par_bailleur(self, request):
+        bailleur_id = request.data.get('bailleur_id')
+        if not bailleur_id:
+            return Response({"detail": "bailleur_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return recuperer_locataires(bailleur_id)
     
-   
+    @action(detail=False, methods=['post'])
+    def bailleur_par_locataire(self, request):
+        locataire_id = request.data.get('locataire_id')
+        if not locataire_id:
+            return Response({"detail": "locataire_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return recuperer_bailleur(locataire_id)
+    
+    @action(detail=False, methods=['post'])
+    def maison_par_locataire(self, request):
+        locataire_id = request.data.get('locataire_id')
+        if not locataire_id:
+            return Response({"detail": "locataire_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return recuperer_maison_locataire(locataire_id)
+    
+    @action(detail=False, methods=['post'])
+    def maisons_par_bailleur(self, request):
+        bailleur_id = request.data.get('bailleur_id')
+        if not bailleur_id:
+            return Response({"detail": "bailleur_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return recuperer_maisons_bailleur(bailleur_id)
 class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
     serializer_class = EvenementSerializer
