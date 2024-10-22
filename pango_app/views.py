@@ -52,7 +52,7 @@ def recuperer_bailleur(locataire_id):
         serializer = UtilisateurSerializer(biens, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        return Response({"detail": "Aucun bailleur trouvé."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"detail": "Aucun bailleur trouvé."}, status=status.HTTP_400_BAD_REQUEST)
     
 def recuperer_maison_locataire(locataire_id):
     # Récupérer le contrat de location lié au locataire
@@ -436,6 +436,50 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def locataires_par_bailleur(self, request):
+        """
+        Récupère les locataires associés à un bailleur spécifique.
+        Cette méthode extrait l'identifiant du bailleur à partir de la requête et 
+        renvoie les locataires associés à ce bailleur. Si l'identifiant du bailleur 
+        n'est pas fourni, une réponse avec un message d'erreur et un statut HTTP 400 
+        est renvoyée.
+        Args:
+            request (Request): La requête HTTP contenant les données nécessaires.
+        {"bailleur_id":1}
+        Returns:
+            Response code 200
+            [
+                    {
+                        "id": 2,
+                        "password": "12345678",
+                        "last_login": null,
+                        "is_superuser": false,
+                        "username": "glosingson23@gmail.com",
+                        "first_name": "G-Losingson",
+                        "last_name": "Birungi",
+                        "email": "glosingson23@gmail.com",
+                        "is_staff": false,
+                        "is_active": true,
+                        "date_joined": "2024-10-21T20:46:45.726487Z",
+                        "photo_url": "https://firebasestorage.googleapis.com/v0/b/pangogest.appspot.com/o/profil.png?alt=media&token=800f4279-9fb1-463f-8add-c0f485310caa",
+                        "user_type": "locataire",
+                        "telephone": "+243813445417",
+                        "id_adresse": null,
+                        "groups": [],
+                        "user_permissions": []
+                    }
+                    ]
+        Response code 400
+                    {
+           "detail": "Aucun locataire trouvé."
+           }
+        
+
+                
+                            """
+        
+        #documenre
+        
+        
         bailleur_id = request.data.get('bailleur_id')
         if not bailleur_id:
             return Response({"detail": "bailleur_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
@@ -444,6 +488,37 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def bailleur_par_locataire(self, request):
+        """
+        request: {"locataire_id":2}
+        reponse : 200
+                    [
+                            {
+                                "id": 1,
+                                "password": "00000000",
+                                "last_login": null,
+                                "is_superuser": false,
+                                "username": "georgesbyona@gmail.com",
+                                "first_name": "Georges",
+                                "last_name": "Byona",
+                                "email": "georgesbyona@gmail.com",
+                                "is_staff": false,
+                                "is_active": true,
+                                "date_joined": "2024-10-20T13:07:08.110676Z",
+                                "photo_url": "https://lh3.googleusercontent.com/a/ACg8ocLrFO4QlXqP0Elvw0cspu9YMHbut7Os8iSPpfxtzo6NTJZtw5s=s96-c",
+                                "user_type": "bailleur",
+                                "telephone": "+243844300329",
+                                "id_adresse": null,
+                                "groups": [],
+                                "user_permissions": []
+                            }
+                            ]
+                400:
+                    {
+                        "detail": "Aucun bailleur trouvé."}                                    
+        
+        """
+        
+        
         locataire_id = request.data.get('locataire_id')
         if not locataire_id:
             return Response({"detail": "locataire_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
@@ -452,6 +527,28 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def maison_par_locataire(self, request):
+        """
+        request: {"locataire_id":2}
+        response 200
+                [
+                    {
+                        "id": 1,
+                        "surface": "25x20",
+                        "photo_url": "https://firebasestorage.googleapis.com/v0/b/pangogest.appspot.com/o/demo-houses%2F03.jpg?alt=media&token=e52bee36-2bcc-4e16-b0a8-c23c07703344",
+                        "description": "blablabla",
+                        "prix": "100.00",
+                        "adresse": 1,
+                        "utilisateur": 1
+                    }
+                    ]
+        response 400:
+                {
+             "detail": "Aucune maison trouvée."
+                }
+                
+                                
+        
+        """
         locataire_id = request.data.get('locataire_id')
         if not locataire_id:
             return Response({"detail": "locataire_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
@@ -460,6 +557,34 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def maisons_par_bailleur(self, request):
+        """
+            request:  {"bailleur_id":1}
+       
+            response 200:
+            [
+                        {
+                            "id": 1,
+                            "surface": "25x20",
+                            "photo_url": "https://firebasestorage.googleapis.com/v0/b/pangogest.appspot.com/o/demo-houses%2F03.jpg?alt=media&token=e52bee36-2bcc-4e16-b0a8-c23c07703344",
+                            "description": "blablabla",
+                            "prix": "100.00",
+                            "adresse": 1,
+                            "utilisateur": 1
+                        },
+                        {
+                            "id": 4,
+                            "surface": "25x50",
+                            "photo_url": "https://firebasestorage.googleapis.com/v0/b/pangogest.appspot.com/o/houses%2F1729444895680?alt=media&token=932aff43-9120-4c39-9956-5cd5229958ed",
+                            "description": "Maison simple et paisible, avec 3 chambres, 3 toilettes, 1 salon et 1 cuisine.",
+                            "prix": "250.00",
+                            "adresse": 4,
+                            "utilisateur": 1
+                        }
+                        ]
+                                    
+            
+        """
+        
         bailleur_id = request.data.get('bailleur_id')
         if not bailleur_id:
             return Response({"detail": "bailleur_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
