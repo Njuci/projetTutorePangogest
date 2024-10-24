@@ -108,16 +108,7 @@ DATABASES = {
 
 """
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',  # MySQL backend
-        'NAME': 'pangogest',          # Name of your MySQL database
-        'USER': 'njuci',             # Your MySQL username
-        'PASSWORD': '3670njci',     # Your MySQL password
-        'HOST': 'localhost',             # Host of your MySQL server, e.g., 'localhost' for local
-        'PORT': '3306',                        # Port number (default is 3306)
-    }
-}
+
 
 """
 
