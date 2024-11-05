@@ -130,6 +130,7 @@ class UtilisateurViewSet(viewsets.ModelViewSet):
             properties={
                 'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email'),
                 'password': openapi.Schema(type=openapi.TYPE_STRING, description='Mot de passe'),
+                'user_type': openapi.Schema(type=openapi.TYPE_STRING, description='Type d Utilisateur'),
             },
             required=['email', 'password'],
         ),
@@ -143,10 +144,12 @@ class UtilisateurViewSet(viewsets.ModelViewSet):
     def login(self, request):
         usernme = request.data.get('email')
         password = request.data.get('password')
+        user_type=request.data.get('user_type')
         try:
         # Recherchez l'utilisateur par email
-            user = Utilisateur.objects.get(email=usernme)
+            user = Utilisateur.objects.get(email=usernme,user_type=user_type)
             serializer_user = UtilisateurSerializer(user)
+        
             if serializer_user.data['password'] == password:
                 
                 data = serializer_user.data
