@@ -23,6 +23,47 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
+
+def recuperer_contrat_bailleur(bailleur_id):
+    try:
+        # Recherche des contrats liés au bailleur via le champ `bien.utilisateur_id`
+        contrats = ContratLocation.objects.filter(bien__utilisateur_id=bailleur_id)
+        if not contrats.exists():
+            return Response({"detail": "Aucun contrat trouvé."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Préparation des données pour chaque contrat
+        contrats_data = []
+        for contrat in contrats:
+            if contrat.locataire==None:
+                locataire_info={"Contrat":"Contrat en attente d'approbation"}
+            else:
+                locataire_info = {
+                    "id": contrat.locataire.id,
+                    "first_name": contrat.locataire.first_name,
+                    "last_name": contrat.locataire.last_name,
+                    "email": contrat.locataire.email,
+                    "telephone": contrat.locataire.telephone
+                }    
+            contrat_data = {
+                "id": contrat.id,
+                "date_debut": contrat.date_debut,
+                "dure": contrat.duree_mois,
+                "prix": contrat.prix,
+                "bien": contrat.bien.id,
+                "locataire": locataire_info,
+                "fichier": contrat.fichier.url if contrat.fichier else None,
+                "date_contrat": contrat.date_contrat,
+                "encours": contrat.encours,
+                        }
+            contrats_data.append(contrat_data)
+        
+        return Response(contrats_data, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({"detail": f"Erreur: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 def recuperer_locataires(bailleur_id):
     # Récupérer les contrats de location pour le bailleur donné
     locataires = ContratLocation.objects.filter(bien__utilisateur__id=bailleur_id).select_related('locataire')
@@ -264,7 +305,7 @@ class AdresseViewSet(viewsets.ModelViewSet):
     def register_adresse(self, request):
         """
         Créer une nouvelle adresse.
-        
+        ²
         Champs requis: ville, commune, quartier, cellule, avenue, num_av.
         """
         serializer = AdresseSerializer(data=request.data)
@@ -296,7 +337,7 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def register_contrat(self, request):
         """
-        Créer un contrat
+        Créer un contraté
         Champs requis: date_debut, date_fin, prix, bien, locataire, fichier,date_contrat,encours,
         mets aussi l'email 
         
@@ -314,7 +355,7 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             if verifier_contrat_chevauchement(bien_immobilier, date_debut, duree_mois):
                 return Response({"message": "Le contrat chevauche un autre contrat existant"}, status=status.HTTP_400_BAD_REQUEST)
         except BienImmobilier.DoesNotExist:
-            return Response({"message": "Bien immobilier non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"messagse": "Bien immobilier non trouvé"}, status=status.HTTP_404_NOT_FOUND)
         
         
         
@@ -469,7 +510,7 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
                         "id_adresse": null,
                         "groups": [],
                         "user_permissions": []
-                    }
+                    }d
                     ]
         Response code 400
                     {
@@ -593,6 +634,54 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             return Response({"detail": "bailleur_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
         
         return recuperer_maisons_bailleur(bailleur_id)
+    
+    @action(detail=False, methods=['post'])
+    def contrat_par_bailleur(self, request):
+        """
+        Récupère les contrats associés à un bailleur spécifique.
+        Cette méthode extrait l'identifiant du bailleur à partir de la requête 
+        et renvoie les contrats associés à ce bailleur. 
+        Si l'identifiant du bailleur n'est pas fourni, une réponse avec un message d'erreur et un statut HTTP 400 est renvoyée.
+
+        Args:
+            request (Request): La requête HTTP contenant les données nécessaires.
+            {"bailleur_id":1}
+        
+        Returns:
+            Response code 200:
+                [
+                    {
+                        "id": 1,
+                        "date_debut": "2024-01-01",
+                        "date_fin": "2024-12-31",
+                        "prix": "500.00",
+                        "bien": 1,
+                        "locataire": 2,
+                        "fichier": "url_du_fichier",
+                        "date_contrat": "2024-01-01",
+                        "encours": true
+                    },
+                    ...
+                ]
+            
+            Response code 400:
+                {
+                    "detail": "Aucun contrat trouvé."
+                }
+        """
+        
+        bailleur_id = request.data.get('bailleur_id')
+        if not bailleur_id:
+            return Response({"detail": "bailleur_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return recuperer_contrat_bailleur(bailleur_id)
+
+            
+        
+        
+    
+    
+    
 class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
     serializer_class = EvenementSerializer
