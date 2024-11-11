@@ -24,6 +24,11 @@ from rest_framework.response import Response
 
 
 
+
+
+
+
+
 def recuperer_contrat_bailleur(bailleur_id):
     try:
         # Recherche des contrats liés au bailleur via le champ `bien.utilisateur_id`
@@ -61,8 +66,43 @@ def recuperer_contrat_bailleur(bailleur_id):
     
     except Exception as e:
         return Response({"detail": f"Erreur: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+    
+ 
+def recuperer_contrat_locataire(locataire_id):
+            try:
+                # Recherche des contrats liés au locataire
+                contrats = ContratLocation.objects.filter(locataire_id=locataire_id)
+                if not contrats.exists():
+                    return Response({"detail": "Aucun contrat trouvé."}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Préparation des données pour chaque contrat
+                contrats_data = []
+                for contrat in contrats:
+                    bailleur_info = {
+                        "id": contrat.bien.utilisateur.id,
+                        "first_name": contrat.bien.utilisateur.first_name,
+                        "last_name": contrat.bien.utilisateur.last_name,
+                        "email": contrat.bien.utilisateur.email,
+                        "telephone": contrat.bien.utilisateur.telephone
+                    }
+                    contrat_data = {
+                        "id": contrat.id,
+                        "date_debut": contrat.date_debut,
+                        "dure": contrat.duree_mois,
+                        "prix": contrat.prix,
+                        "bien": contrat.bien.id,
+                        "bailleur": bailleur_info,
+                        "fichier": contrat.fichier.url if contrat.fichier else None,
+                        "date_contrat": contrat.date_contrat,
+                        "encours": contrat.encours,
+                    }
+                    contrats_data.append(contrat_data)
+                
+                return Response(contrats_data, status=status.HTTP_200_OK)
+            
+            except Exception as e:
+                return Response({"detail": f"Erreur: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+   
 
 def recuperer_locataires(bailleur_id):
     # Récupérer les contrats de location pour le bailleur donné
@@ -635,6 +675,18 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
         
         return recuperer_maisons_bailleur(bailleur_id)
     
+    
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'bailleur_id': openapi.Schema(type=openapi.TYPE_STRING, description='bailleur_id')},
+            required=['bailleur_id'],
+        ),
+        )
+    
+    
     @action(detail=False, methods=['post'])
     def contrat_par_bailleur(self, request):
         """
@@ -675,7 +727,23 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             return Response({"detail": "bailleur_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
         
         return recuperer_contrat_bailleur(bailleur_id)
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'locataire_id': openapi.Schema(type=openapi.TYPE_STRING, description='locataire_id')},
+            required=['locataire_id'],
+        ),
+        )
+    @action(detail=False,methods=['post'])
+    def contrat_par_locataire(self,request):
+        locataire_id = request.data.get('locataire_id')
+        if not locataire_id:
+            return Response({"detail": "locataire_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
 
+        return recuperer_contrat_locataire(locataire_id)
+    
             
         
         
