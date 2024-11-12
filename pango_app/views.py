@@ -71,6 +71,7 @@ def recuperer_contrat_bailleur(bailleur_id):
 def recuperer_contrat_locataire(locataire_id):
             try:
                 # Recherche des contrats liés au locataire
+                
                 contrats = ContratLocation.objects.filter(locataire_id=locataire_id)
                 if not contrats.exists():
                     return Response({"detail": "Aucun contrat trouvé."}, status=status.HTTP_400_BAD_REQUEST)
@@ -374,19 +375,37 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
     serializer_class = ContratLocationSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = ContratLocationFilter
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'bien': openapi.Schema(type=openapi.TYPE_INTEGER, description='Bien'),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email du locataire'),
+                'date_debut': openapi.Schema(type=openapi.TYPE_STRING, description='Date du début de Contrat'),
+                'duree_mois': openapi.Schema(type=openapi.TYPE_INTEGER, description='Durée du contrat en mois'),
+                'fichier': openapi.Schema(type=openapi.TYPE_STRING, description='Fichier du contrat'),
+                'prix': openapi.Schema(type=openapi.TYPE_STRING, description='Prix convenu pour le contrat'),
+                'encours': openapi.Schema(type=openapi.TYPE_STRING, description='Statut du contrat'),
+            },
+            required=['bien', 'email', 'date_debut', 'duree_mois', 'prix'],
+        ),
+        responses={
+            201: "Contrat créé avec succès",
+            400: "Erreur de validation"
+        }
+    )
     @action(detail=False, methods=['post'])
     def register_contrat(self, request):
         """
-        Créer un contraté
-        Champs requis: date_debut, date_fin, prix, bien, locataire, fichier,date_contrat,encours,
-        mets aussi l'email 
-        
+        Créer un contrat
+        Champs requis: bien, email, date_debut, duree_mois, prix
         """
         # Récupérer les données de la requête
-        bien= request.data.get('bien')
+        bien = request.data.get('bien')
         date_debut = request.data.get('date_debut')
         duree_mois = request.data.get('duree_mois')
-        email=request.data.get('email')
+        email = request.data.get('email')
         
         # Vérifier si le bien immobilier existe
         try:
@@ -395,49 +414,42 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             if verifier_contrat_chevauchement(bien_immobilier, date_debut, duree_mois):
                 return Response({"message": "Le contrat chevauche un autre contrat existant"}, status=status.HTTP_400_BAD_REQUEST)
         except BienImmobilier.DoesNotExist:
-            return Response({"messagse": "Bien immobilier non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "Bien immobilier non trouvé"}, status=status.HTTP_404_NOT_FOUND)
         
-        
-        
-        
-        serializer = ContratLocationSerializer(data=request.data)  
-        #chercher le proprietaire du bien
+        serializer = ContratLocationSerializer(data=request.data)
+        # Chercher le propriétaire du bien
         proprietaire = f'{bien_immobilier.utilisateur.first_name} {bien_immobilier.utilisateur.last_name}'
         
-        
-             
-                                                                          
-                                                                           
         if serializer.is_valid():
             serializer.save()
             
-            #en voyant un email
+            # Envoi d'un email
             contrat = serializer.data
-            #gemerer un motcle
+            # Générer un mot clé
             mot_cle = generer_mot_cle_unique()
-            #enregistrer le mot cle via son serializer
-            mot_cle_serializer = Mot_cleSerializer(data={'email':email,'contrat':serializer.data['id'],'mot_cle':mot_cle})
+            # Enregistrer le mot clé via son serializer
+            mot_cle_serializer = Mot_cleSerializer(data={'email': email, 'contrat': serializer.data['id'], 'mot_cle': mot_cle})
             if mot_cle_serializer.is_valid():
                 mot_cle_serializer.save()
             else:
-                return Response({"message":"Erreur lors de la création du mot-clé","error":mot_cle_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": "Erreur lors de la création du mot-clé", "error": mot_cle_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             
-            contrat2 ={}
-            #met leskeys en Majuscule en eliminant les underscores
+            contrat2 = {}
+            # Mettre les clés en majuscule en éliminant les underscores
             for key in contrat:
-                new_key = key.replace('_',' ').upper()
+                new_key = key.replace('_', ' ').upper()
                 contrat2[new_key] = contrat[key]
             contrat = contrat2
-            has_send=envoyer_email(email,proprietaire,contrat,mot_cle)
+            has_send = envoyer_email(email, proprietaire, contrat, mot_cle)
             if has_send:
                 message = {
-                "response": "Contrat créé avec succès",
-                "contrat": serializer.data
-            }
+                    "response": "Contrat créé avec succès",
+                    "contrat": serializer.data
+                }
                 return Response(message, status=status.HTTP_201_CREATED)
             else:
-                return Response({"message":"Erreur lors de l'envoi de l'email"}, status=status.HTTP_400_BAD_REQUEST)
-            #
+                return Response({"message": "Erreur lors de l'envoi de l'email"}, status=status.HTTP_400_BAD_REQUEST)
+        
         message = {
             "response": "Erreur de validation",
             "errors": serializer.errors
