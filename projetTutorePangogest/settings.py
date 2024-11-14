@@ -163,9 +163,11 @@ AUTH_USER_MODEL = 'pango_app.Utilisateur'
 
 
 # Email backend configuration
+
+# Email backend configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'toussaintmushamuka4@gmail.com'
-EMAIL_HOST_PASSWORD = 'xkztbntabbfsaxka'
+EMAIL_HOST_USER = 'augustinnjuci@gmail.com'
+EMAIL_HOST_PASSWORD = 'fmzyfuvjvqxgjcwk'
 EMAIL_USE_TLS = True

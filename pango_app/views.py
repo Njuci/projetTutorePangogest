@@ -383,6 +383,9 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
                 'bien': openapi.Schema(type=openapi.TYPE_INTEGER, description='Bien'),
                 'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email du locataire'),
                 'date_debut': openapi.Schema(type=openapi.TYPE_STRING, description='Date du début de Contrat'),
+                'date_contrat': openapi.Schema(type=openapi.TYPE_STRING, description='Date à laquelle le Contrat a été signée'),
+                
+                
                 'duree_mois': openapi.Schema(type=openapi.TYPE_INTEGER, description='Durée du contrat en mois'),
                 'fichier': openapi.Schema(type=openapi.TYPE_STRING, description='Fichier du contrat'),
                 'prix': openapi.Schema(type=openapi.TYPE_STRING, description='Prix convenu pour le contrat'),
@@ -431,6 +434,7 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             mot_cle_serializer = Mot_cleSerializer(data={'email': email, 'contrat': serializer.data['id'], 'mot_cle': mot_cle})
             if mot_cle_serializer.is_valid():
                 mot_cle_serializer.save()
+                
             else:
                 return Response({"message": "Erreur lors de la création du mot-clé", "error": mot_cle_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             
