@@ -460,6 +460,18 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
         }
         return Response(message, status=status.HTTP_400_BAD_REQUEST)
     
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'mot_cle': openapi.Schema(type=openapi.TYPE_STRING, description='Mot_clé'),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email du locataire'),
+                },
+                
+            required=['mot_cle','email'],
+        ),
+        ) 
     @action(detail=False, methods=['post'])
     def verifier_mot_cle(self, request):
         """
@@ -485,6 +497,20 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
         except Mot_cle.DoesNotExist:
             return Response({"message": "Mot clé ou email non trouvés ou non valides"},
                             status=status.HTTP_404_NOT_FOUND)
+    
+    
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'mot_cle': openapi.Schema(type=openapi.TYPE_STRING, description='Mot_clé'),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email du locataire'),
+                'response': openapi.Schema(type=openapi.TYPE_STRING, description='Réponse du locataire "Accepter ou Refuser"'),},
+                
+            required=['mot_cle','email','response'],
+        ),
+        )
     
     @action(detail=False, methods=['post'])
     def validation_contrat(self, request):
@@ -534,6 +560,16 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
         except Utilisateur.DoesNotExist:
             return Response({"message": "Aucun utilisateur associé à cet email"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'bailleur_id': openapi.Schema(type=openapi.TYPE_STRING, description='bailleur_id')},
+            required=['bailleur_id'],
+        ),
+        )
+    
     @action(detail=False, methods=['post'])
     def locataires_par_bailleur(self, request):
         """
@@ -624,6 +660,15 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             return Response({"detail": "locataire_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
         
         return recuperer_bailleur(locataire_id)
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'locataire_id': openapi.Schema(type=openapi.TYPE_STRING, description='bailleur_id')},
+            required=['locataire_id'],
+        ),
+        )
     
     @action(detail=False, methods=['post'])
     def maison_par_locataire(self, request):
@@ -654,6 +699,15 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             return Response({"detail": "locataire_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
         
         return recuperer_maison_locataire(locataire_id)
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'bailleur_id': openapi.Schema(type=openapi.TYPE_STRING, description='bailleur_id')},
+            required=['bailleur_id'],
+        ),
+        )
     
     @action(detail=False, methods=['post'])
     def maisons_par_bailleur(self, request):
@@ -769,5 +823,6 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
 class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
     serializer_class = EvenementSerializer
+    
     
     
