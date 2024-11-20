@@ -530,7 +530,7 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
             mot_cle_instance = Mot_cle.objects.get(mot_cle=mot_cle, email=email)
 
             # Chercher l'utilisateur associé à l'email
-            user = Utilisateur.objects.get(email=email)
+            user = Utilisateur.objects.get(email=email,user_type='locataire')
             if user.user_type != 'locataire':
                 return Response({"errors": "Un utilisateur doit être du type locataire"}, status=status.HTTP_400_BAD_REQUEST)
 
