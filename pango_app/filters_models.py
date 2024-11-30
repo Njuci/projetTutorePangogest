@@ -36,3 +36,9 @@ class Mot_cleFilter(django_filters.FilterSet):
     class Meta:
         model = Mot_cle
         fields = ['mot_cle']
+        
+        
+class NotificationFilter(django_filters.FilterSet):
+    class Meta:
+        model = Notification
+        fields = ['vu','utilisateur','date_creation']

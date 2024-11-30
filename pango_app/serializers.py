@@ -43,3 +43,10 @@ class Mot_cleSerializer(ModelSerializer):
     class Meta:
         model = Mot_cle
         fields = '__all__'
+        
+        
+class NotificationSerializer(ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
+        

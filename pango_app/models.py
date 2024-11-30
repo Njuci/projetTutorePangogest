@@ -154,6 +154,16 @@ class Evenement(models.Model):
             return True
         return False
 
+class Notification(models.Model):
+    """ Modèle pour stocker les notifications """
+    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    date_creation = models.DateTimeField(auto_now_add=True)
+    vu = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Notification pour {self.utilisateur} - {self.message[:50]}"
+
 class FilMessagerie(models.Model):
     contrat = models.OneToOneField(ContratLocation, on_delete=models.CASCADE, related_name='fil_messagerie')
 
@@ -169,3 +179,8 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Message de {self.expediteur} à {self.destinataire} le {self.date_heure}"
+''' 
+
+
+
+'''

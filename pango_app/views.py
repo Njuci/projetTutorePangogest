@@ -818,7 +818,197 @@ class ContratLocationViewSet(viewsets.ModelViewSet):
         
         
     
+class NotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NotificationFilter
     
+    #register notification
+    """   utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    date_creation = models.DateTimeField(auto_now_add=True)
+    vu = models.BooleanField(default=False) """
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'utilisateur': openapi.Schema(type=openapi.TYPE_INTEGER, description='Utilisateur'),
+                'message': openapi.Schema(type=openapi.TYPE_STRING, description='Message'),
+                'vu': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Vu'),
+            },
+            required=['utilisateur', 'message'],
+        ),
+        responses={
+            201: "Notification créée avec succès",
+            400: "Erreur de validation"
+        }
+    )
+    
+    @action(detail=False, methods=['post'])
+    def register_notification(self, request):
+        """
+        Créer une nouvelle notification.
+        
+        Champs requis: utilisateur, message.
+        """
+        serializer = NotificationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            message = {
+                "response": "Notification créée avec succès",
+                "notification": serializer.data
+            }
+            return Response(message, status=status.HTTP_201_CREATED)
+        message = {
+            "response": "Erreur de validation",
+            "errors": serializer.errors
+        }
+        return Response(message, status=status.HTTP_400_BAD_REQUEST)
+    
+    #get notification by user en le rangeant par date de creation decroissante
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'utilisateur': openapi.Schema(type=openapi.TYPE_INTEGER, description='Utilisateur'),
+            },
+            required=['utilisateur'],
+        ),
+        )
+    @action(detail=False, methods=['post'])
+    def get_notification_by_user(self, request):
+        """
+        Récupère les notifications associées à un utilisateur spécifique.
+        Cette méthode extrait l'identifiant de l'utilisateur à partir de la requête et renvoie les notifications associées à cet utilisateur. Si l'identifiant de l'utilisateur n'est pas fourni, une réponse avec un message d'erreur et un statut HTTP 400 est renvoyée.
+
+        Args:
+            request (Request): La requête HTTP contenant les données nécessaires.
+            {"utilisateur":1}
+        
+        Returns:
+            Response code 200:
+                [
+                    {
+                        "id": 1,
+                        "utilisateur": 1,
+                        "message": "Notification 1",
+                        "date_creation": "2024-01-01T00:00:00Z",
+                        "vu": false
+                    },
+                    ...
+                ]
+            
+            Response code 400:
+                {
+                    "detail": "Aucune notification trouvée."
+                }
+        """
+        
+        utilisateur_id = request.data.get('utilisateur')
+        if not utilisateur_id:
+            return Response({"detail": "utilisateur est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        notifications = Notification.objects.filter(utilisateur=utilisateur_id).order_by('-date_creation')
+        if notifications.exists():
+            serializer = NotificationSerializer(notifications, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response({"detail": "Aucune notification trouvée."}, status=status.HTTP_404_NOT_FOUND)
+    #marquer une notification comme lu
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'notification_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Notification'),
+            },
+            required=['notification_id'],
+        ),
+        )   
+    @action(detail=False, methods=['post'])
+    def marquer_notification_lu(self, request):
+        """
+        Marquer une notification comme lue.
+        Cette méthode extrait l'identifiant de la notification à partir de la requête et met à jour le champ 'vu' de la notification correspondante à 'True'. Si l'identifiant de la notification n'est pas fourni, une réponse avec un message d'erreur et un statut HTTP 400 est renvoyée.
+
+        Args:
+            request (Request): La requête HTTP contenant les données nécessaires.
+            {"notification_id":1}
+        
+        Returns:
+            Response code 200:
+                {
+                    "response": "Notification marquée comme lue avec succès",
+                    "notification": {
+                        "id": 1,
+                        "utilisateur": 1,
+                        "message": "Notification 1",
+                        "date_creation": "2024-01-01T00:00:00Z",
+                        "vu": true
+                    }
+                }
+            
+            Response code 400:
+                {
+                    "detail": "Notification non trouvée."
+                }
+        """
+        
+        notification_id = request.data.get('notification_id')
+        if not notification_id:
+            return Response({"detail": "notification_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            notification = Notification.objects.get(id=notification_id)
+            notification.vu = True
+            notification.save()
+            serializer = NotificationSerializer(notification)
+            return Response({"response": "Notification marquée comme lue avec succès", "notification": serializer.data}, status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response({"detail": "Notification non trouvée."}, status=status.HTTP_404_NOT_FOUND)
+        
+        #nombre de notification non lues
+    @swagger_auto_schema(
+        method='post',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'utilisateur': openapi.Schema(type=openapi.TYPE_INTEGER, description='Utilisateur'),
+            },
+            required=['utilisateur'],
+        ),
+        )
+    @action(detail=False, methods=['post'])
+    def nombre_notification_non_lue(self, request):
+        """
+        Récupère le nombre de notifications non lues associées à un utilisateur spécifique.
+        Cette méthode extrait l'identifiant de l'utilisateur à partir de la requête et renvoie le nombre de notifications non lues associées à cet utilisateur. Si l'identifiant de l'utilisateur n'est pas fourni, une réponse avec un message d'erreur et un statut HTTP 400 est renvoyée.
+
+        Args:
+            request (Request): La requête HTTP contenant les données nécessaires.
+            {"utilisateur":1}
+        
+        Returns:
+            Response code 200:
+                {
+                    "nombre": 2
+                }
+            
+            Response code 400:
+                {
+                    "detail": "Aucune notification trouvée."
+                }
+        """
+        
+        utilisateur_id = request.data.get('utilisateur')
+        if not utilisateur_id:
+            return Response({"detail": "utilisateur est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        nombre_notifications_non_lues = Notification.objects.filter(utilisateur=utilisateur_id, vu=False).count()
+        return Response({"nombre": nombre_notifications_non_lues}, status=status.HTTP_200_OK)
     
 class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
