@@ -8,12 +8,12 @@ from datetime import timedelta
 
 class Adresse(models.Model):
     # Modèle pour stocker les adresses des biens immobiliers
-    ville = models.CharField(max_length=255)
+    ville = models.CharField(max_length=255,default='Bukavu')
     commune = models.CharField(max_length=255)
     quartier = models.CharField(max_length=255)
     cellule = models.CharField(max_length=255,null=True)
-    avenue = models.CharField(max_length=255)
-    num_av = models.CharField(max_length=10)
+    avenue = models.CharField(max_length=255,null=True)
+    num_av = models.CharField(max_length=10,null=True)
     def __str__(self):
         return f"{self.avenue}, {self.quartier}, {self.commune}, {self.ville}"
 

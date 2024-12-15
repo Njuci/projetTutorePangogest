@@ -43,8 +43,10 @@ INSTALLED_APPS = [
     'djoser',
     'django_filters',
     'drf_yasg',
-    'pango_app',
+   
+    'pango_app.apps.PangoAppConfig',
     'corsheaders',
+    'background_task',
 ]
 
 

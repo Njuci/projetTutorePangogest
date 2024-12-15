@@ -49,16 +49,38 @@ def recuperer_contrat_bailleur(bailleur_id):
                     "email": contrat.locataire.email,
                     "telephone": contrat.locataire.telephone
                 }    
+            #infos sur le bien et l'adresse
+            bien_info = {
+                "id": contrat.bien.id,
+                "surface": contrat.bien.surface,
+                "photo_url": contrat.bien.photo_url,
+                "description": contrat.bien.description,
+                "prix": contrat.bien.prix,
+                "adresse": {
+                    "id": contrat.bien.adresse.id,
+                    "ville": contrat.bien.adresse.ville,
+                    "commune": contrat.bien.adresse.commune,
+                    "quartier": contrat.bien.adresse.quartier,
+                    "cellule": contrat.bien.adresse.cellule,
+                    "avenue": contrat.bien.adresse.avenue,
+                    "num_av": contrat.bien.adresse.num_av,
+                }   
+            } 
+             
+             
+              
             contrat_data = {
                 "id": contrat.id,
                 "date_debut": contrat.date_debut,
                 "dure": contrat.duree_mois,
                 "prix": contrat.prix,
                 "bien": contrat.bien.id,
+                "fichier": contrat.fichier,
                 "locataire": locataire_info,
-                "fichier": contrat.fichier.url if contrat.fichier else None,
                 "date_contrat": contrat.date_contrat,
                 "encours": contrat.encours,
+                "bien_info": bien_info
+                
                         }
             contrats_data.append(contrat_data)
         
@@ -86,6 +108,23 @@ def recuperer_contrat_locataire(locataire_id):
                         "email": contrat.bien.utilisateur.email,
                         "telephone": contrat.bien.utilisateur.telephone
                     }
+                    
+                    bien_info = {
+                "id": contrat.bien.id,
+                "surface": contrat.bien.surface,
+                "photo_url": contrat.bien.photo_url,
+                "description": contrat.bien.description,
+                "prix": contrat.bien.prix,
+                "adresse": {
+                    "id": contrat.bien.adresse.id,
+                    "ville": contrat.bien.adresse.ville,
+                    "commune": contrat.bien.adresse.commune,
+                    "quartier": contrat.bien.adresse.quartier,
+                    "cellule": contrat.bien.adresse.cellule,
+                    "avenue": contrat.bien.adresse.avenue,
+                    "num_av": contrat.bien.adresse.num_av,
+                }   
+                    } 
                     contrat_data = {
                         "id": contrat.id,
                         "date_debut": contrat.date_debut,
@@ -93,9 +132,10 @@ def recuperer_contrat_locataire(locataire_id):
                         "prix": contrat.prix,
                         "bien": contrat.bien.id,
                         "bailleur": bailleur_info,
-                        "fichier": contrat.fichier.url if contrat.fichier else None,
+                        "fichier": contrat.fichier,
                         "date_contrat": contrat.date_contrat,
                         "encours": contrat.encours,
+                        'bien_info':bien_info
                     }
                     contrats_data.append(contrat_data)
                 
