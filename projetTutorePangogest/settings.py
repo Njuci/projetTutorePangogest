@@ -46,7 +46,6 @@ INSTALLED_APPS = [
    
     'pango_app.apps.PangoAppConfig',
     'corsheaders',
-    'background_task',
 ]
 
 
