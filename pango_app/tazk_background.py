@@ -81,7 +81,7 @@ def start_scheduler():
     central_africa_tz = pytz.timezone("Africa/Lubumbashi")
     scheduler.add_job(
         notifier_locataire,
-        trigger=CronTrigger(hour=10,minute=59,timezone=central_africa_tz),  # Par exemple, toutes les 60 secondes
+        trigger=CronTrigger(hour=11,minute=29,timezone=central_africa_tz),  # Par exemple, toutes les 60 secondes
         id="notifier_locataire",  # ID unique pour éviter les doublons
         replace_existing=True
     )
