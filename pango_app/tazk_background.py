@@ -3,6 +3,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 
 from django.utils import timezone
+import pytz
 from .models import ContratLocation, Notification
 
 def notifier_locataire():
@@ -77,9 +78,10 @@ def notifier_locataire():
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
+    central_africa_tz = pytz.timezone("Africa/Lubumbashi")
     scheduler.add_job(
         notifier_locataire,
-        trigger=CronTrigger(hour=0,minute=0),  # Par exemple, toutes les 60 secondes
+        trigger=CronTrigger(hour=10,minute=57,timezone=central_africa_tz),  # Par exemple, toutes les 60 secondes
         id="notifier_locataire",  # ID unique pour éviter les doublons
         replace_existing=True
     )

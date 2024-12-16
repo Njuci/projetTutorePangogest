@@ -11,6 +11,7 @@ admin.site.register(ContratLocation)
 admin.site.register(Payement)
 admin.site.register(Evenement)
 admin.site.register(Mot_cle)
+admin.site.register(Notification)
 admin.site.register(FilMessagerie)
 admin.site.register(Message)
 

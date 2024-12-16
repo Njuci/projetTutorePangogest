@@ -1055,4 +1055,14 @@ class EvenementViewSet(viewsets.ModelViewSet):
     serializer_class = EvenementSerializer
     
     
+from rest_framework.views import APIView
+class delete_all_notification(viewsets.ViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NotificationFilter
     
+    @action(detail=False, methods=['post'])
+    def post(self,request):
+        Notification.objects.all().delete()
+        return Response({"message":"all notification deleted"},status=status.HTTP_200_OK)
